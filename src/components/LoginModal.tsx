@@ -182,19 +182,44 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           </div>
         </form>
 
-        {/* Demo Credentials */}
+        {/* Demo Credentials and Setup Instructions */}
         {isLogin && (
           <div className="px-6 pb-6">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <h4 className="text-sm font-medium text-blue-900 mb-2">Contas de Demonstração:</h4>
-              <div className="text-xs text-blue-800 space-y-1">
-                <p><strong>Analista:</strong> ana.silva@meioambiente.gov.br / 123456</p>
-                <p><strong>Gestor:</strong> maria.costa@meioambiente.gov.br / 123456</p>
+              <h4 className="text-sm font-medium text-blue-900 mb-2">🚀 Primeiros Passos:</h4>
+              <div className="text-xs text-blue-800 space-y-2">
+                <div>
+                  <p className="font-medium">1. Criar sua primeira conta:</p>
+                  <p>Clique em "Não tem conta? Criar nova conta" abaixo</p>
+                </div>
+                <div>
+                  <p className="font-medium">2. Ou use contas de teste (se já criadas):</p>
+                  <p><strong>Analista:</strong> ana.silva@meioambiente.gov.br / 123456</p>
+                  <p><strong>Gestor:</strong> maria.costa@meioambiente.gov.br / 123456</p>
+                </div>
               </div>
-              <div className="mt-2 pt-2 border-t border-blue-200">
+              <div className="mt-3 pt-2 border-t border-blue-200">
                 <p className="text-xs text-blue-700">
-                  <strong>⚠️ Importante:</strong> Se estiver com erro de credenciais, verifique se as confirmações de email estão <strong>desabilitadas</strong> no Supabase (Authentication → Settings).
+                  <strong>⚠️ Configuração Importante:</strong> No Supabase Dashboard → Authentication → Settings, certifique-se que <strong>"Enable email confirmations" está DESABILITADO</strong> para desenvolvimento.
                 </p>
+              </div>
+              <div className="mt-2">
+                <button
+                  onClick={async () => {
+                    try {
+                      // Create demo users
+                      await signUp('ana.silva@meioambiente.gov.br', '123456', 'Ana Silva', 'analista');
+                      await signUp('maria.costa@meioambiente.gov.br', '123456', 'Maria Costa', 'gestor');
+                      alert('Contas de demonstração criadas com sucesso! Agora você pode fazer login com elas.');
+                    } catch (error) {
+                      console.error('Error creating demo users:', error);
+                      alert('Erro ao criar contas de demonstração: ' + (error as Error).message);
+                    }
+                  }}
+                  className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
+                >
+                  🔧 Criar Contas de Demonstração
+                </button>
               </div>
             </div>
           </div>

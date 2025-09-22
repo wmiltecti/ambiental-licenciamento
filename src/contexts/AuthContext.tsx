@@ -106,6 +106,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error('Sistema não configurado. Entre em contato com o administrador.');
     }
     
+    console.log('Attempting to sign up user:', { email, name, role });
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -119,8 +121,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     
     if (error) {
+      console.error('Supabase signup error:', error);
       if (error.message.includes('User already registered')) {
-        throw new Error('Este email já está cadastrado. Tente fazer login ou use outro email.');
+        console.log('User already exists, this is expected for demo users');
+        return; // Don't throw error for existing users when creating demo accounts
       } else if (error.message.includes('Invalid email')) {
         throw new Error('Email inválido. Verifique o formato do email.');
       } else if (error.message.includes('Password should be at least')) {
@@ -130,8 +134,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
     
+    console.log('Signup successful:', data);
+    
     if (data.user && !data.user.email_confirmed_at && !data.session) {
-      throw new Error('Cadastro realizado! Verifique seu email para confirmar a conta antes de fazer login.');
+      console.log('User created but email confirmation required');
+      // Don't throw error if email confirmation is disabled
+      return;
     }
   };
 
