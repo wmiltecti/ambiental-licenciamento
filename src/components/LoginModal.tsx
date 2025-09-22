@@ -205,17 +205,42 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               </div>
               <div className="mt-2">
                 <button
+                 type="button"
                   onClick={async () => {
                     try {
-                      // Create demo users
-                      await signUp('ana.silva@meioambiente.gov.br', '123456', 'Ana Silva', 'analista');
-                      await signUp('maria.costa@meioambiente.gov.br', '123456', 'Maria Costa', 'gestor');
-                      alert('Contas de demonstração criadas com sucesso! Agora você pode fazer login com elas.');
+                      setLoading(true);
+                      setError('');
+                      
+                      // Create demo users one by one
+                      try {
+                        await signUp('ana.silva@meioambiente.gov.br', '123456', 'Ana Silva', 'analista');
+                        console.log('Demo user 1 created successfully');
+                      } catch (err: any) {
+                        if (!err.message.includes('User already registered')) {
+                          throw err;
+                        }
+                        console.log('Demo user 1 already exists');
+                      }
+                      
+                      try {
+                        await signUp('maria.costa@meioambiente.gov.br', '123456', 'Maria Costa', 'gestor');
+                        console.log('Demo user 2 created successfully');
+                      } catch (err: any) {
+                        if (!err.message.includes('User already registered')) {
+                          throw err;
+                        }
+                        console.log('Demo user 2 already exists');
+                      }
+                      
+                      alert('Contas de demonstração configuradas! Agora você pode fazer login com:\n\n• ana.silva@meioambiente.gov.br / 123456\n• maria.costa@meioambiente.gov.br / 123456');
                     } catch (error) {
                       console.error('Error creating demo users:', error);
-                      alert('Erro ao criar contas de demonstração: ' + (error as Error).message);
+                      setError('Erro ao criar contas: ' + (error as Error).message);
+                    } finally {
+                      setLoading(false);
                     }
                   }}
+                 disabled={loading}
                   className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
                 >
                   🔧 Criar Contas de Demonstração
@@ -224,6 +249,25 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             </div>
           </div>
         )}
+
+        {/* Database Setup Instructions */}
+        <div className="px-6 pb-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <h4 className="text-sm font-medium text-red-900 mb-2">🚨 Erro de Configuração Detectado</h4>
+            <div className="text-xs text-red-800 space-y-2">
+              <p>A tabela 'license_processes' não foi encontrada. Isso indica que o banco de dados não foi configurado.</p>
+              <div>
+                <p className="font-medium">Para corrigir:</p>
+                <ol className="list-decimal list-inside space-y-1 ml-2">
+                  <li>Vá para o Supabase Dashboard → SQL Editor</li>
+                  <li>Execute o arquivo: <code>supabase/migrations/create_core_schema.sql</code></li>
+                  <li>Verifique se as variáveis de ambiente estão corretas</li>
+                  <li>Recarregue a página</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
