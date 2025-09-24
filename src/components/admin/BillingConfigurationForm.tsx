@@ -118,7 +118,7 @@ export default function BillingConfigurationForm({
         state_percentage: '0'
       }));
     }
-  }, [formData.revenue_destination]);
+  }, [formData.revenue_destination, setFormData]);
 
   const loadDropdownData = async () => {
     try {

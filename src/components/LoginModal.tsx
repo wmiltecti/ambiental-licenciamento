@@ -205,7 +205,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               </div>
               <div className="mt-2">
                 <button
-                 type="button"
+                  type="button"
                   onClick={async () => {
                     try {
                       setLoading(true);
@@ -240,7 +240,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                       setLoading(false);
                     }
                   }}
-                 disabled={loading}
+                  disabled={loading}
                   className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
                 >
                   🔧 Criar Contas de Demonstração

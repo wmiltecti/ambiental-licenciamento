@@ -575,7 +575,7 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
                     <button 
                       className="text-green-600 hover:text-green-700 text-sm px-3 py-1 border border-green-300 rounded hover:bg-green-50"
                       onClick={() => handleViewDocument(doc)}
-                     type="button"
+                      type="button"
                     >
                       Visualizar
                     </button>

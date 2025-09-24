@@ -127,7 +127,7 @@ function MapClickHandler({
       console.log('✅ Map centered on layer:', layer.name);
       onZoomComplete();
     }
-  }, [zoomToLayerId, map, layers, onZoomComplete]);
+  }, [zoomToLayerId, map, layers]);
 
   return null;
 }
@@ -513,19 +513,23 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
   const handleFeatureRightClick = (feature: GeoFeature, latlng: L.LatLng) => {
-    setContextMenu({
-      x: (event as any).clientX,
-      y: (event as any).clientY,
-      feature
-    });
+    // Get mouse position from the map event
+    const mapContainer = document.querySelector('.leaflet-container');
+    if (mapContainer) {
+      const rect = mapContainer.getBoundingClientRect();
+      setContextMenu({
+        x: rect.left + 200, // Approximate position
+        y: rect.top + 200,
+        feature
+      });
+    }
   };
 
   const handleZoomToFeature = (feature: GeoFeature) => {
     // Get map instance
-    const mapContainer = document.querySelector('.leaflet-container') as any;
-    if (!mapContainer || !mapContainer._leaflet_map) return;
+    if (!mapInstance) return;
     
-    const map = mapContainer._leaflet_map;
+    const map = mapInstance;
     
     // Calculate bounds for the feature
     let bounds: L.LatLngBounds;

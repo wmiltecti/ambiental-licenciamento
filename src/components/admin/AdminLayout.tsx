@@ -24,7 +24,6 @@ const adminSections = [
   { id: 'process-types', name: 'Tipos de Processo', icon: FileText },
   { id: 'license-types', name: 'Tipos de Licença', icon: FileCheck },
   { id: 'activities', name: 'Atividades', icon: Activity },
-  { id: 'activities', name: 'Atividades', icon: Activity },
   { id: 'enterprise-sizes', name: 'Porte do Empreendimento', icon: Scale },
   { id: 'pollution-potentials', name: 'Potencial Poluidor', icon: AlertTriangle },
   { id: 'reference-units', name: 'Unidades de Referência', icon: Calculator },

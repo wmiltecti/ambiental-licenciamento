@@ -221,14 +221,14 @@ export class ProcessService {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    console.log('ProcessService.updateProcess called with:', { id, updates, userId: user.id });
+    console.log('ProcessService.updateProcess called with:', { id, updates, userId: user.id.substring(0, 8) + '...' });
 
     const updateData = {
       ...updates,
       updated_at: new Date().toISOString()
     };
 
-    console.log('Update data prepared:', updateData);
+    console.log('Update data prepared for process:', id);
 
     const { data, error } = await supabase
       .from('license_processes')
@@ -240,7 +240,7 @@ export class ProcessService {
 
     if (error) {
       console.error('Error updating process:', error);
-      console.error('Error details:', { id, userId: user.id, updateData });
+      console.error('Error details for process:', id);
       
       // Log activity for collaboration
       if (updates.status) {
