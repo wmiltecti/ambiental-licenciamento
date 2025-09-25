@@ -82,6 +82,13 @@ export class ProcessService {
       
       if (ownedResult.error) {
         console.error('Error fetching owned processes:', ownedResult.error);
+        
+        // Handle RLS infinite recursion error specifically
+        if (ownedResult.error.message.includes('infinite recursion detected in policy')) {
+          console.error('🚨 RLS Policy Error: Infinite recursion detected. Please fix database policies.');
+          throw new Error('Erro de configuração do banco de dados. As políticas RLS precisam ser corrigidas. Consulte a documentação do projeto para resolver este problema.');
+        }
+        
         if (ownedResult.error.message.includes('Failed to fetch') || ownedResult.error.message.includes('fetch')) {
           console.warn('Database connection failed, returning empty processes');
           return [];
@@ -91,13 +98,19 @@ export class ProcessService {
       
       if (collaboratedResult.error) {
         console.error('Error fetching collaborated processes:', collaboratedResult.error);
+        
+        // Handle RLS infinite recursion error for collaborated processes
+        if (collaboratedResult.error.message.includes('infinite recursion detected in policy')) {
+          console.warn('🚨 RLS Policy Error in collaborated processes: Infinite recursion detected. Continuing with owned processes only.');
+        }
+        
         // Don't throw error for collaborated processes, just log it
         console.warn('Could not load collaborated processes, continuing with owned only');
       }
       
       // Combine and deduplicate processes
       const ownedProcesses = ownedResult.data || [];
-      const collaboratedProcesses = collaboratedResult.data || [];
+      const collaboratedProcesses = collaboratedResult.error?.message.includes('infinite recursion') ? [] : (collaboratedResult.data || []);
       
       // Mark processes with collaboration info
       const markedOwned = ownedProcesses.map(p => ({ ...p, isOwner: true }));
@@ -125,6 +138,12 @@ export class ProcessService {
       return allProcesses;
     } catch (error) {
       console.error('ProcessService.getProcesses error:', error);
+      
+      // Handle RLS infinite recursion error specifically
+      if (error.message?.includes('infinite recursion detected in policy') || error.message?.includes('Erro de configuração do banco de dados')) {
+        throw error; // Re-throw the specific RLS error message
+      }
+      
       if (error.message?.includes('Failed to fetch') || error.message?.includes('fetch')) {
         console.warn('Connection error in getProcesses, returning empty array');
         return [];
