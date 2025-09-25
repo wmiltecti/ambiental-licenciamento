@@ -169,7 +169,7 @@ function AppContent() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-left">
             <h3 className="font-medium text-blue-900 mb-3">📋 Passo a passo para configurar:</h3>
             <ol className="text-sm text-blue-800 space-y-2">
-              <li><strong>1.</strong> Acesse <a href="https://supabase.com/dashboard" target="_blank" className="text-blue-600 underline">https://supabase.com/dashboard</a></li>
+              <li><strong>1.</strong> Acesse <a href="https://supabase.com/dashboard" target=\"_blank" className="text-blue-600 underline">https://supabase.com/dashboard</a></li>
               <li><strong>2.</strong> Crie um novo projeto ou selecione um existente</li>
               <li><strong>3.</strong> Vá em Settings → API</li>
               <li><strong>4.</strong> Copie a "Project URL" e "anon public" key</li>
@@ -183,68 +183,6 @@ function AppContent() {
           >
             🔄 Recarregar após configurar
           </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Show RLS policy error if processes fail to load due to database configuration
-  const showRLSError = processes.length === 0 && user && isConfigured;
-  
-  if (showRLSError) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center max-w-3xl mx-4">
-          <div className="w-16 h-16 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-6">
-            <AlertTriangle className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Configuração do Banco de Dados Necessária</h1>
-          <p className="text-gray-600 mb-4">
-            As políticas RLS (Row Level Security) do Supabase precisam ser corrigidas para evitar recursão infinita.
-          </p>
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 text-left mb-6">
-            <h3 className="font-medium text-orange-900 mb-3">🔧 Como corrigir:</h3>
-            <ol className="text-sm text-orange-800 space-y-2">
-              <li><strong>1.</strong> Acesse seu projeto no <a href="https://supabase.com/dashboard" target="_blank" className="text-orange-600 underline">Supabase Dashboard</a></li>
-              <li><strong>2.</strong> Vá para <strong>SQL Editor</strong></li>
-              <li><strong>3.</strong> Execute o script SQL fornecido na documentação do projeto</li>
-              <li><strong>4.</strong> Recarregue esta página após executar o script</li>
-            </ol>
-          </div>
-          <div className="bg-gray-100 border border-gray-200 rounded-lg p-4 text-left mb-6">
-            <h4 className="font-medium text-gray-900 mb-2">📋 Script SQL para executar:</h4>
-            <pre className="text-xs text-gray-700 overflow-x-auto">
-{`-- Remover políticas problemáticas
-DROP POLICY IF EXISTS "processes_select_own_or_collaborated" ON license_processes;
-DROP POLICY IF EXISTS "processes_update_own_or_editor" ON license_processes;
-DROP POLICY IF EXISTS "Users can view collaborators of their processes" ON process_collaborators;
-DROP POLICY IF EXISTS "collaborators_insert_by_owner" ON process_collaborators;
-
--- Criar políticas simples sem recursão
-CREATE POLICY "license_processes_select_own" ON license_processes
-  FOR SELECT TO authenticated USING (user_id = auth.uid());
-
-CREATE POLICY "license_processes_update_own" ON license_processes
-  FOR UPDATE TO authenticated USING (user_id = auth.uid());
-
-CREATE POLICY "process_collaborators_select_own" ON process_collaborators
-  FOR SELECT TO authenticated USING (user_id = auth.uid());`}
-            </pre>
-          </div>
-          <div className="flex gap-4 justify-center">
-            <button
-              onClick={() => window.location.reload()}
-              className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
-            >
-              🔄 Recarregar após corrigir
-            </button>
-            <button
-              onClick={handleSignOut}
-              className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              🚪 Fazer Logout
-            </button>
-          </div>
         </div>
       </div>
     );
