@@ -600,6 +600,9 @@ function AppContent() {
               </h2>
             </div>
             <div className="flex items-center space-x-4">
+              <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                <Bell className="w-5 h-5" />
+              </button>
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-medium">
@@ -618,12 +621,6 @@ function AppContent() {
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>
-              <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                <Bell className="w-5 h-5" />
-              </button>
-              <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                <Settings className="w-5 h-5" />
-              </button>
             </div>
           </div>
         </header>
