@@ -578,26 +578,12 @@ function AppContent() {
           {/* User Profile */}
           <div className="px-4 py-4 border-t border-gray-200">
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
-                    {userMetadata?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
-                  </span>
+              {/* Empty space or minimal branding */}
+              {!sidebarCollapsed && (
+                <div className="text-center w-full">
+                  <p className="text-xs text-gray-400">SisLicAmb v1.0</p>
                 </div>
-                {!sidebarCollapsed && (
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">{userMetadata?.name || user?.email}</p>
-                    <p className="text-xs text-gray-500">{userMetadata?.role || 'Usuário'}</p>
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={handleSignOut}
-                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                title={sidebarCollapsed ? "Sair" : "Sair"}
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
+              )}
             </div>
           </div>
         </div>
@@ -614,6 +600,24 @@ function AppContent() {
               </h2>
             </div>
             <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">
+                    {userMetadata?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900">{userMetadata?.name || user?.email}</p>
+                  <p className="text-xs text-gray-500">{userMetadata?.role || 'Usuário'}</p>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                  title="Sair"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
               <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
                 <Bell className="w-5 h-5" />
               </button>
