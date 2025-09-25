@@ -65,12 +65,8 @@ function AppContent() {
     } catch (error) {
       console.error('Error loading processes:', error);
       
-      // Show specific error message for RLS policy issues
-      if (error.message?.includes('Erro de configuração do banco de dados') || 
-          error.message?.includes('infinite recursion detected in policy')) {
-        // Don't show alert for RLS errors, just log and show empty state
-        console.error('🚨 RLS Policy Error - Database configuration needed');
-      }
+      // Log RLS policy issues but don't throw errors
+      console.warn('🚨 Database configuration issue detected - showing empty state');
       
       setProcesses([]);
     }
@@ -82,6 +78,7 @@ function AppContent() {
       setStats(statsData);
     } catch (error) {
       console.error('Error loading stats:', error);
+      // Always set default stats instead of throwing errors
       setStats({
         total: 0,
         pending: 0,
@@ -91,6 +88,20 @@ function AppContent() {
       });
     }
   };
+
+  // Show a notice about database configuration if needed
+  const showDatabaseNotice = processes.length === 0 && stats.total === 0 && user && isConfigured;
+
+  const DatabaseConfigurationNotice = () => (
+    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+      <div className="flex items-center">
+        <AlertTriangle className="w-5 h-5 text-yellow-600 mr-3" />
+        <p className="text-yellow-800 text-sm">
+          <strong>Configuração do banco necessária:</strong> Execute o script SQL de correção das políticas RLS conforme descrito no README.md para resolver problemas de recursão infinita.
+        </p>
+      </div>
+    </div>
+  );
 
   const handleNewProcess = async (processData: any) => {
     try {
@@ -264,6 +275,7 @@ function AppContent() {
 
   const renderDashboard = () => (
     <div className="space-y-6">
+      {showDatabaseNotice && <DatabaseConfigurationNotice />}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <div className="flex space-x-3">
@@ -377,6 +389,7 @@ function AppContent() {
 
   const renderProcesses = () => (
     <div className="space-y-6">
+      {showDatabaseNotice && <DatabaseConfigurationNotice />}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Processos de Licenciamento</h1>
         <button 
