@@ -4,6 +4,7 @@ import { Upload, FileText, MapPin, AlertCircle, CheckCircle, X } from 'lucide-re
 interface GeoUploadProps {
   isOpen: boolean;
   onClose: () => void;
+  onUpload: (data: any[]) => void;
   onUpload: (data: any[], fileName: string) => void;
 }
 

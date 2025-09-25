@@ -82,36 +82,22 @@ export class ProcessService {
       
       if (ownedResult.error) {
         console.error('Error fetching owned processes:', ownedResult.error);
-        
-        // Handle RLS infinite recursion error specifically
-        if (ownedResult.error.message.includes('infinite recursion detected in policy')) {
-          console.warn('🚨 RLS Policy Error: Infinite recursion detected. Returning empty processes.');
-          return [];
-        }
-        
         if (ownedResult.error.message.includes('Failed to fetch') || ownedResult.error.message.includes('fetch')) {
           console.warn('Database connection failed, returning empty processes');
           return [];
         }
-        console.warn('Error loading processes, returning empty array:', ownedResult.error.message);
-        return [];
+        throw new Error('Erro ao carregar processos próprios: ' + ownedResult.error.message);
       }
       
       if (collaboratedResult.error) {
         console.error('Error fetching collaborated processes:', collaboratedResult.error);
-        
-        // Handle RLS infinite recursion error for collaborated processes
-        if (collaboratedResult.error.message.includes('infinite recursion detected in policy')) {
-          console.warn('🚨 RLS Policy Error in collaborated processes: Infinite recursion detected. Continuing with owned processes only.');
-        }
-        
         // Don't throw error for collaborated processes, just log it
         console.warn('Could not load collaborated processes, continuing with owned only');
       }
       
       // Combine and deduplicate processes
       const ownedProcesses = ownedResult.data || [];
-      const collaboratedProcesses = collaboratedResult.error?.message.includes('infinite recursion') ? [] : (collaboratedResult.data || []);
+      const collaboratedProcesses = collaboratedResult.data || [];
       
       // Mark processes with collaboration info
       const markedOwned = ownedProcesses.map(p => ({ ...p, isOwner: true }));
@@ -139,19 +125,11 @@ export class ProcessService {
       return allProcesses;
     } catch (error) {
       console.error('ProcessService.getProcesses error:', error);
-      
-      // Handle RLS infinite recursion error specifically
-      if (error.message?.includes('infinite recursion detected in policy')) {
-        console.warn('🚨 RLS Policy Error in catch block, returning empty array');
-        return [];
-      }
-      
       if (error.message?.includes('Failed to fetch') || error.message?.includes('fetch')) {
         console.warn('Connection error in getProcesses, returning empty array');
         return [];
       }
-      console.warn('General error in getProcesses, returning empty array:', error.message);
-      return [];
+      throw error;
     }
   }
 
@@ -243,14 +221,14 @@ export class ProcessService {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    console.log('ProcessService.updateProcess called with:', { id, updates, userId: user.id.substring(0, 8) + '...' });
+    console.log('ProcessService.updateProcess called with:', { id, updates, userId: user.id });
 
     const updateData = {
       ...updates,
       updated_at: new Date().toISOString()
     };
 
-    console.log('Update data prepared for process:', id);
+    console.log('Update data prepared:', updateData);
 
     const { data, error } = await supabase
       .from('license_processes')
@@ -262,7 +240,7 @@ export class ProcessService {
 
     if (error) {
       console.error('Error updating process:', error);
-      console.error('Error details for process:', id);
+      console.error('Error details:', { id, userId: user.id, updateData });
       
       // Log activity for collaboration
       if (updates.status) {
@@ -352,17 +330,6 @@ export class ProcessService {
 
       if (error) {
         console.error('Error fetching process stats:', error);
-        if (error.message.includes('infinite recursion detected in policy')) {
-          console.warn('🚨 RLS Policy Error in stats, returning default stats');
-          return {
-            total: 0,
-            pending: 0,
-            analysis: 0,
-            approved: 0,
-            rejected: 0,
-            expired: 0
-          };
-        }
         if (error.message.includes('Failed to fetch') || error.message.includes('fetch')) {
           console.warn('Database connection failed, returning default stats');
           return {
@@ -374,15 +341,7 @@ export class ProcessService {
             expired: 0
           };
         }
-        console.warn('Error loading stats, returning default stats:', error.message);
-        return {
-          total: 0,
-          pending: 0,
-          analysis: 0,
-          approved: 0,
-          rejected: 0,
-          expired: 0
-        };
+        throw new Error('Erro ao carregar estatísticas: ' + error.message);
       }
 
       const processData = data || [];
@@ -409,15 +368,7 @@ export class ProcessService {
           expired: 0
         };
       }
-      console.warn('General error in getProcessStats, returning default stats:', error.message);
-      return {
-        total: 0,
-        pending: 0,
-        analysis: 0,
-        approved: 0,
-        rejected: 0,
-        expired: 0
-      };
+      throw error;
     }
   }
 }

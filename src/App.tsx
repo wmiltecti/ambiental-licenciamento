@@ -29,7 +29,7 @@ import {
 import GeoVisualization from './components/geo/GeoVisualization';
 
 function AppContent() {
-  const { user, userMetadata, signOut, loading, isConfigured } = useAuth();
+  const { user, userMetadata, signOut, loading, isConfigured, isSupabaseReady } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -49,11 +49,11 @@ function AppContent() {
 
   // Load processes when user is authenticated
   React.useEffect(() => {
-    if (user && isConfigured) {
+    if (user && isConfigured && isSupabaseReady) {
       loadProcesses();
       loadStats();
     }
-  }, [user, searchTerm, filterStatus, isConfigured]);
+  }, [user, searchTerm, filterStatus, isConfigured, isSupabaseReady]);
 
   const loadProcesses = async () => {
     try {
@@ -64,10 +64,6 @@ function AppContent() {
       setProcesses(data);
     } catch (error) {
       console.error('Error loading processes:', error);
-      
-      // Log RLS policy issues but don't throw errors
-      console.warn('🚨 Database configuration issue detected - showing empty state');
-      
       setProcesses([]);
     }
   };
@@ -78,7 +74,6 @@ function AppContent() {
       setStats(statsData);
     } catch (error) {
       console.error('Error loading stats:', error);
-      // Always set default stats instead of throwing errors
       setStats({
         total: 0,
         pending: 0,
@@ -88,20 +83,6 @@ function AppContent() {
       });
     }
   };
-
-  // Show a notice about database configuration if needed
-  const showDatabaseNotice = processes.length === 0 && stats.total === 0 && user && isConfigured;
-
-  const DatabaseConfigurationNotice = () => (
-    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-      <div className="flex items-center">
-        <AlertTriangle className="w-5 h-5 text-yellow-600 mr-3" />
-        <p className="text-yellow-800 text-sm">
-          <strong>Configuração do banco necessária:</strong> Execute o script SQL de correção das políticas RLS conforme descrito no README.md para resolver problemas de recursão infinita.
-        </p>
-      </div>
-    </div>
-  );
 
   const handleNewProcess = async (processData: any) => {
     try {
@@ -166,16 +147,20 @@ function AppContent() {
   }
 
   // Show configuration error if Supabase is not configured
-  if (!isConfigured) {
+  if (!isConfigured || !isSupabaseReady) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center max-w-2xl mx-4">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+        <div className="relative text-center max-w-2xl mx-4 glass-effect p-8 rounded-lg">
           <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertTriangle className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Sistema Não Configurado</h1>
           <p className="text-gray-600 mb-4">
-            As variáveis de ambiente do Supabase não estão configuradas corretamente.
+            {!isConfigured 
+              ? "As variáveis de ambiente do Supabase não estão configuradas corretamente."
+              : "Não foi possível conectar ao Supabase. Verifique se as credenciais estão corretas."
+            }
           </p>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-left">
             <h3 className="font-medium text-blue-900 mb-3">📋 Passo a passo para configurar:</h3>
@@ -186,6 +171,7 @@ function AppContent() {
               <li><strong>4.</strong> Copie a "Project URL" e "anon public" key</li>
               <li><strong>5.</strong> Clique no botão "Connect to Supabase" no canto superior direito desta tela</li>
               <li><strong>6.</strong> Cole suas credenciais reais do Supabase</li>
+              <li><strong>7.</strong> Certifique-se de que o banco de dados está configurado e acessível</li>
             </ol>
           </div>
           <button
@@ -202,8 +188,9 @@ function AppContent() {
   // Show login screen if not authenticated
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+        <div className="relative text-center glass-effect p-8 rounded-lg mx-4">
           <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
             <Shield className="w-8 h-8 text-white" />
           </div>
@@ -275,9 +262,8 @@ function AppContent() {
 
   const renderDashboard = () => (
     <div className="space-y-6">
-      {showDatabaseNotice && <DatabaseConfigurationNotice />}
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Painel de Controle</h1>
         <div className="flex space-x-3">
           <button 
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
@@ -291,7 +277,7 @@ function AppContent() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="stat-card p-6 rounded-lg">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
               <FileText className="w-6 h-6 text-blue-600" />
@@ -303,7 +289,7 @@ function AppContent() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="stat-card p-6 rounded-lg">
           <div className="flex items-center">
             <div className="p-2 bg-yellow-100 rounded-lg">
               <Clock className="w-6 h-6 text-yellow-600" />
@@ -315,7 +301,7 @@ function AppContent() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="stat-card p-6 rounded-lg">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
               <TrendingUp className="w-6 h-6 text-blue-600" />
@@ -327,7 +313,7 @@ function AppContent() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="stat-card p-6 rounded-lg">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 rounded-lg">
               <CheckCircle className="w-6 h-6 text-green-600" />
@@ -339,7 +325,7 @@ function AppContent() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="stat-card p-6 rounded-lg">
           <div className="flex items-center">
             <div className="p-2 bg-red-100 rounded-lg">
               <AlertTriangle className="w-6 h-6 text-red-600" />
@@ -353,8 +339,8 @@ function AppContent() {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
+      <div className="glass-effect rounded-lg">
+        <div className="p-6 border-b border-gray-200 border-opacity-50">
           <h2 className="text-xl font-semibold text-gray-900">Atividade Recente</h2>
         </div>
         <div className="p-6">
@@ -362,7 +348,7 @@ function AppContent() {
             {processes.slice(0, 3).map((license) => (
               <div 
                 key={license.id} 
-                className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                className="flex items-center space-x-4 p-4 bg-white bg-opacity-60 rounded-lg hover:bg-opacity-80 cursor-pointer transition-all duration-200 hover:transform hover:scale-[1.02]"
                 onClick={() => handleProcessClick(license)}
               >
                 <div className="flex-shrink-0">
@@ -401,7 +387,7 @@ function AppContent() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+      <div className="glass-effect p-4 rounded-lg">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -434,8 +420,8 @@ function AppContent() {
       </div>
 
       {/* Process List */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
+      <div className="glass-effect rounded-lg">
+        <div className="p-6 border-b border-gray-200 border-opacity-50">
           <h2 className="text-xl font-semibold text-gray-900">Lista de Processos</h2>
         </div>
         <div className="overflow-x-auto">
@@ -455,7 +441,7 @@ function AppContent() {
               {filteredLicenses.map((license) => (
                 <tr 
                   key={license.id} 
-                  className="hover:bg-gray-50 cursor-pointer transition-colors"
+                  className="hover:bg-green-50 hover:bg-opacity-50 cursor-pointer transition-all duration-200"
                   onClick={() => handleProcessClick(license)}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -539,14 +525,14 @@ function AppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 bg-white shadow-lg z-50 transition-all duration-300 ${
+      <div className={`fixed inset-y-0 left-0 sidebar-nav shadow-lg z-50 sidebar-transition ${
         sidebarCollapsed ? 'w-16' : 'w-64'
       }`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center px-6 py-4 border-b border-gray-200 bg-white">
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
@@ -554,8 +540,8 @@ function AppContent() {
                 </div>
                 {!sidebarCollapsed && (
                   <div className="ml-3">
-                    <h1 className="text-lg font-bold text-gray-900">SisLicAmb</h1>
-                    <p className="text-xs text-gray-500">Sistema de Licenciamento</p>
+                    <h1 className="text-lg font-bold text-gray-900">Painel</h1>
+                    <p className="text-xs text-gray-500">Licenciamento Ambiental</p>
                   </div>
                 )}
               </div>
@@ -574,21 +560,23 @@ function AppContent() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2">
+          <nav className="flex-1 px-4 py-6 space-y-1">
             {navigation.map((item) => {
               const Icon = item.icon;
               return (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`w-full flex items-center px-3 py-3 rounded-lg text-sm font-medium nav-item ${
                     activeTab === item.id
-                      ? 'bg-green-100 text-green-700 border border-green-200'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'active text-green-700'
+                      : 'text-gray-600 hover:text-gray-900'
                   }`}
                   title={sidebarCollapsed ? item.name : undefined}
                 >
-                  <Icon className="w-5 h-5 flex-shrink-0 mr-3" />
+                  <Icon className={`w-5 h-5 flex-shrink-0 ${!sidebarCollapsed ? 'mr-3' : ''} ${
+                    activeTab === item.id ? 'text-green-600' : ''
+                  }`} />
                   {!sidebarCollapsed && item.name}
                 </button>
               );
@@ -596,58 +584,57 @@ function AppContent() {
           </nav>
 
           {/* User Profile */}
-          <div className="px-4 py-4 border-t border-gray-200">
-            <div className="flex items-center justify-between">
-              {/* Empty space or minimal branding */}
-              {!sidebarCollapsed && (
-                <div className="text-center w-full">
-                  <p className="text-xs text-gray-400">SisLicAmb v1.0</p>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className={`transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
         {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200">
+        <header className="dark-header">
           <div className="px-6 py-4 flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <h2 className="text-sm text-gray-500">
+              <h2 className="text-sm text-gray-300">
                 Sistema de Licenciamento Ambiental - Baseado na Legislação Brasileira
               </h2>
             </div>
             <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+              <button className="p-2 text-gray-300 hover:text-white transition-colors">
                 <Bell className="w-5 h-5" />
               </button>
+              
+              {/* User Info */}
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center user-avatar">
                   <span className="text-white text-sm font-medium">
                     {userMetadata?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
                   </span>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">{userMetadata?.name || user?.email}</p>
-                  <p className="text-xs text-gray-500">{userMetadata?.role || 'Usuário'}</p>
+                  <p className="text-sm font-medium text-white">{userMetadata?.name || user?.email}</p>
+                  <p className="text-xs text-gray-300">{userMetadata?.role || 'Usuário'}</p>
                 </div>
-                <button
-                  onClick={handleSignOut}
-                  className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                  title="Sair"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
               </div>
+              
+              <button className="p-2 text-gray-300 hover:text-white transition-colors">
+                <Settings className="w-5 h-5" />
+              </button>
+              
+              <button
+                onClick={handleSignOut}
+                className="p-2 text-gray-300 hover:text-white transition-colors"
+                title="Sair"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </header>
 
         {/* Content */}
-        <main className="p-6">
+        <main className="p-6 min-h-screen">
+          <div className="content-area p-6 min-h-[calc(100vh-140px)]">
           {renderContent()}
+          </div>
         </main>
       </div>
 

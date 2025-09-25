@@ -62,24 +62,25 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+      <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+      <div className="relative login-modal rounded-lg shadow-xl w-full max-w-md">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark-header rounded-t-lg">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-white">
                 {isLogin ? 'Entrar no Sistema' : 'Criar Conta'}
               </h2>
-              <p className="text-sm text-gray-500">Sistema de Licenciamento Ambiental</p>
+              <p className="text-sm text-gray-300">Sistema de Licenciamento Ambiental</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-2 text-gray-300 hover:text-white transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -182,92 +183,23 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           </div>
         </form>
 
-        {/* Demo Credentials and Setup Instructions */}
+        {/* Demo Credentials */}
         {isLogin && (
           <div className="px-6 pb-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <h4 className="text-sm font-medium text-blue-900 mb-2">🚀 Primeiros Passos:</h4>
-              <div className="text-xs text-blue-800 space-y-2">
-                <div>
-                  <p className="font-medium">1. Criar sua primeira conta:</p>
-                  <p>Clique em "Não tem conta? Criar nova conta" abaixo</p>
-                </div>
-                <div>
-                  <p className="font-medium">2. Ou use contas de teste (se já criadas):</p>
-                  <p><strong>Analista:</strong> ana.silva@meioambiente.gov.br / 123456</p>
-                  <p><strong>Gestor:</strong> maria.costa@meioambiente.gov.br / 123456</p>
-                </div>
+            <div className="bg-blue-50 bg-opacity-80 border border-blue-200 rounded-lg p-3">
+              <h4 className="text-sm font-medium text-blue-900 mb-2">Contas de Demonstração:</h4>
+              <div className="text-xs text-blue-800 space-y-1">
+                <p><strong>Analista:</strong> ana.silva@meioambiente.gov.br / 123456</p>
+                <p><strong>Gestor:</strong> maria.costa@meioambiente.gov.br / 123456</p>
               </div>
-              <div className="mt-3 pt-2 border-t border-blue-200">
+              <div className="mt-2 pt-2 border-t border-blue-200">
                 <p className="text-xs text-blue-700">
-                  <strong>⚠️ Configuração Importante:</strong> No Supabase Dashboard → Authentication → Settings, certifique-se que <strong>"Enable email confirmations" está DESABILITADO</strong> para desenvolvimento.
+                  <strong>⚠️ Importante:</strong> Se estiver com erro de credenciais, verifique se as confirmações de email estão <strong>desabilitadas</strong> no Supabase (Authentication → Settings).
                 </p>
-              </div>
-              <div className="mt-2">
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      setLoading(true);
-                      setError('');
-                      
-                      // Create demo users one by one
-                      try {
-                        await signUp('ana.silva@meioambiente.gov.br', '123456', 'Ana Silva', 'analista');
-                        console.log('Demo user 1 created successfully');
-                      } catch (err: any) {
-                        if (!err.message.includes('User already registered')) {
-                          throw err;
-                        }
-                        console.log('Demo user 1 already exists');
-                      }
-                      
-                      try {
-                        await signUp('maria.costa@meioambiente.gov.br', '123456', 'Maria Costa', 'gestor');
-                        console.log('Demo user 2 created successfully');
-                      } catch (err: any) {
-                        if (!err.message.includes('User already registered')) {
-                          throw err;
-                        }
-                        console.log('Demo user 2 already exists');
-                      }
-                      
-                      alert('Contas de demonstração configuradas! Agora você pode fazer login com:\n\n• ana.silva@meioambiente.gov.br / 123456\n• maria.costa@meioambiente.gov.br / 123456');
-                    } catch (error) {
-                      console.error('Error creating demo users:', error);
-                      setError('Erro ao criar contas: ' + (error as Error).message);
-                    } finally {
-                      setLoading(false);
-                    }
-                  }}
-                  disabled={loading}
-                  className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
-                >
-                  🔧 Criar Contas de Demonstração
-                </button>
               </div>
             </div>
           </div>
         )}
-
-        {/* Database Setup Instructions */}
-        <div className="px-6 pb-6">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <h4 className="text-sm font-medium text-red-900 mb-2">🚨 Erro de Configuração Detectado</h4>
-            <div className="text-xs text-red-800 space-y-2">
-              <p>A tabela 'license_processes' não foi encontrada. Isso indica que o banco de dados não foi configurado.</p>
-              <div>
-                <p className="font-medium">Para corrigir:</p>
-                <ol className="list-decimal list-inside space-y-1 ml-2">
-                  <li>Vá para o Supabase Dashboard → SQL Editor</li>
-                  <li>Execute o arquivo: <code>supabase/migrations/create_core_schema.sql</code></li>
-                  <li>Verifique se as variáveis de ambiente estão corretas</li>
-                  <li>Recarregue a página</li>
-                </ol>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

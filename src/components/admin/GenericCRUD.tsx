@@ -63,6 +63,11 @@ export default function GenericCRUD({
     setRefreshTrigger(prev => prev + 1);
   };
 
+  // Expose refresh function to parent
+  React.useImperativeHandle(React.forwardRef(() => null), () => ({
+    refreshData
+  }));
+
   const loadItems = async () => {
     setLoading(true);
     try {

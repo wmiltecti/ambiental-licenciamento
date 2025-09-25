@@ -2,11 +2,23 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
+// Test Supabase connection
+const testSupabaseConnection = async (): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase.from('license_processes').select('count').limit(1);
+    return !error;
+  } catch (err) {
+    console.warn('Supabase connection test failed:', err);
+    return false;
+  }
+};
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
   isConfigured: boolean;
+  isSupabaseReady: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string, role: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -20,6 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isConfigured] = useState(isSupabaseConfigured());
+  const [isSupabaseReady, setIsSupabaseReady] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -27,6 +40,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initAuth = async () => {
       if (!isConfigured) {
         if (mounted) {
+          setIsSupabaseReady(false);
+          setLoading(false);
+        }
+        return;
+      }
+
+      // Test Supabase connection
+      const connectionTest = await testSupabaseConnection();
+      if (mounted) {
+        setIsSupabaseReady(connectionTest);
+      }
+
+      if (!connectionTest) {
+        if (mounted) {
+          setSession(null);
+          setUser(null);
           setLoading(false);
         }
         return;
@@ -57,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes only if configured
     let subscription: any = null;
-    if (isConfigured) {
+    if (isConfigured && isSupabaseReady) {
       const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
           if (mounted) {
@@ -76,10 +105,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         subscription.unsubscribe();
       }
     };
-  }, [isConfigured]);
+  }, [isConfigured, isSupabaseReady]);
 
   const signIn = async (email: string, password: string) => {
-    if (!isConfigured) {
+    if (!isConfigured || !isSupabaseReady) {
       throw new Error('Sistema não configurado. Entre em contato com o administrador.');
     }
     
@@ -102,11 +131,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, name: string, role: string) => {
-    if (!isConfigured) {
+    if (!isConfigured || !isSupabaseReady) {
       throw new Error('Sistema não configurado. Entre em contato com o administrador.');
     }
-    
-    console.log('Attempting to sign up user:', { email, name, role });
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -121,10 +148,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     
     if (error) {
-      console.error('Supabase signup error:', error);
       if (error.message.includes('User already registered')) {
-        console.log('User already exists, this is expected for demo users');
-        return; // Don't throw error for existing users when creating demo accounts
+        throw new Error('Este email já está cadastrado. Tente fazer login ou use outro email.');
       } else if (error.message.includes('Invalid email')) {
         throw new Error('Email inválido. Verifique o formato do email.');
       } else if (error.message.includes('Password should be at least')) {
@@ -134,12 +159,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
     
-    console.log('Signup successful:', data);
-    
     if (data.user && !data.user.email_confirmed_at && !data.session) {
-      console.log('User created but email confirmation required');
-      // Don't throw error if email confirmation is disabled
-      return;
+      throw new Error('Cadastro realizado! Verifique seu email para confirmar a conta antes de fazer login.');
     }
   };
 
@@ -153,6 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     loading,
     isConfigured,
+    isSupabaseReady,
     signIn,
     signUp,
     signOut,
