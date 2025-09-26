@@ -4,7 +4,7 @@
 
 /* Background image for the entire application */
 body {
-  background-image: url('https://images.pexels.com/photos/974314/pexels-photo-974314.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop');
+  background-image: url('/backgroud copy.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
