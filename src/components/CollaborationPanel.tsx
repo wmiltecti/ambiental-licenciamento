@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CollaborationService, type Collaborator, type CollaborationInvite } from '../services/collaborationService';
-import { Users, UserPlus, Mail, Shield, Trash2, Edit3, Eye, Crown, AlertCircle, Check, X } from 'lucide-react';
+import { Users, UserPlus, Mail, Shield, Trash2, Edit3, Eye, Crown, AlertCircle, Check, X, FileText } from 'lucide-react';
+import ProcurationUpload from './ProcurationUpload';
 
 interface CollaborationPanelProps {
   processId: string;
@@ -14,6 +15,7 @@ export default function CollaborationPanel({ processId, userPermission }: Collab
   const [inviteEmail, setInviteEmail] = useState('');
   const [invitePermission, setInvitePermission] = useState<'viewer' | 'editor' | 'admin'>('viewer');
   const [loading, setLoading] = useState(false);
+  const [selectedCollaboratorForUpload, setSelectedCollaboratorForUpload] = useState<string | null>(null);
 
   useEffect(() => {
     if (processId) {
@@ -273,9 +275,44 @@ export default function CollaborationPanel({ processId, userPermission }: Collab
                   )}
                 </div>
               </div>
-              <div className="mt-2 text-xs text-gray-500">
-                Colaborando desde {new Date(collaborator.accepted_at || collaborator.invited_at).toLocaleDateString('pt-BR')}
+              <div className="mt-3 flex items-center justify-between border-t pt-3">
+                <div className="text-xs text-gray-500">
+                  Colaborando desde {new Date(collaborator.accepted_at || collaborator.invited_at).toLocaleDateString('pt-BR')}
+                </div>
+                <button
+                  onClick={() => setSelectedCollaboratorForUpload(
+                    selectedCollaboratorForUpload === collaborator.id ? null : collaborator.id
+                  )}
+                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+                >
+                  <FileText className="w-4 h-4" />
+                  {collaborator.procuracao_storage_path ? 'Ver Procuração' : 'Adicionar Procuração'}
+                </button>
               </div>
+
+              {selectedCollaboratorForUpload === collaborator.id && (
+                <div className="mt-4 pt-4 border-t">
+                  <h5 className="text-sm font-medium text-gray-900 mb-3">
+                    Procuração do Colaborador
+                  </h5>
+                  <ProcurationUpload
+                    processId={processId}
+                    collaboratorId={collaborator.id}
+                    existingFile={collaborator.procuracao_storage_path ? {
+                      storagePath: collaborator.procuracao_storage_path,
+                      metadata: collaborator.procuracao_file_metadata as any
+                    } : undefined}
+                    onUploadComplete={() => {
+                      loadCollaborators();
+                      setSelectedCollaboratorForUpload(null);
+                    }}
+                    onDelete={() => {
+                      loadCollaborators();
+                      setSelectedCollaboratorForUpload(null);
+                    }}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>
