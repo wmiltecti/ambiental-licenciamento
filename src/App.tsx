@@ -575,31 +575,6 @@ function AppContent() {
             })}
           </nav>
 
-          {/* User Profile */}
-          <div className="px-4 py-4 border-t border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
-                    {userMetadata?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
-                  </span>
-                </div>
-                {!sidebarCollapsed && (
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">{userMetadata?.name || user?.email}</p>
-                    <p className="text-xs text-gray-500">{userMetadata?.role || 'Usuário'}</p>
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={handleSignOut}
-                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                title={sidebarCollapsed ? "Sair" : "Sair"}
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -617,9 +592,28 @@ function AppContent() {
               <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
                 <Bell className="w-5 h-5" />
               </button>
-              <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                <Settings className="w-5 h-5" />
-              </button>
+
+              {/* User Profile in Header */}
+              <div className="flex items-center space-x-3 pl-4 border-l border-gray-200">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-medium">
+                      {userMetadata?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">{userMetadata?.name || user?.email}</p>
+                    <p className="text-xs text-gray-500">{userMetadata?.role || 'Usuário'}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                  title="Sair"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </header>
