@@ -25,7 +25,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
   });
 
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   // Test data for each step
   const testData = {
