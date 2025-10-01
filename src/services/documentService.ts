@@ -85,7 +85,7 @@ export class DocumentService {
       const newDocument: DocumentInsert = {
         user_id: userId,
         process_id: processId,
-        name: file.name,
+        file_name: file.name,
         file_size: file.size,
         file_type: file.type || 'application/octet-stream',
         file_path: uploadData.path,
@@ -136,7 +136,7 @@ export class DocumentService {
     // First, get the document with file path for storage cleanup
     const { data: existingDoc, error: checkError } = await supabase
       .from('process_documents')
-      .select('id, name, user_id, file_path')
+      .select('id, file_name, user_id, file_path')
       .eq('id', documentId)
       .single();
     
@@ -155,7 +155,7 @@ export class DocumentService {
     
     console.log('✅ Document found:', { 
       id: existingDoc.id, 
-      name: existingDoc.name, 
+      name: existingDoc.file_name, 
       owner: existingDoc.user_id,
       currentUser: user.id,
       filePath: existingDoc.file_path
@@ -241,7 +241,7 @@ export class DocumentService {
         const url = URL.createObjectURL(data);
         const link = document.createElement('a');
         link.href = url;
-        link.download = fileData.name;
+        link.download = fileData.file_name;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -281,8 +281,8 @@ export class DocumentService {
       }
       
       // For other file types or if download fails, show metadata
-      if (fileData.file_type?.includes('text') || fileData.name.endsWith('.txt')) {
-        return `Documento: ${fileData.name}
+      if (fileData.file_type?.includes('text') || fileData.file_name.endsWith('.txt')) {
+        return `Documento: ${fileData.file_name}
 Tipo: ${fileData.file_type}
 Tamanho: ${fileData.file_size ? (fileData.file_size / 1024).toFixed(2) + ' KB' : 'N/A'}
 Enviado em: ${new Date(fileData.uploaded_at).toLocaleString('pt-BR')}
@@ -292,10 +292,10 @@ Para visualizar o conteúdo completo, faça o download do arquivo.
 ID do documento: ${fileData.id}
 Processo: ${fileData.process_id}`;
       } else if (fileData.file_type?.includes('pdf')) {
-        return `Documento PDF: ${fileData.name}
+        return `Documento PDF: ${fileData.file_name}
 
 INFORMAÇÕES DO ARQUIVO:
-- Nome: ${fileData.name}
+- Nome: ${fileData.file_name}
 - Tipo: ${fileData.file_type}
 - Tamanho: ${fileData.file_size ? (fileData.file_size / 1024).toFixed(2) + ' KB' : 'N/A'}
 - Data: ${new Date(fileData.uploaded_at).toLocaleString('pt-BR')}
@@ -306,7 +306,7 @@ Para visualizar o conteúdo completo, faça o download do arquivo.
 ID: ${fileData.id}
 Processo: ${fileData.process_id}`;
       } else if (fileData.file_type?.includes('image/')) {
-        return `Imagem: ${fileData.name}
+        return `Imagem: ${fileData.file_name}
 Tipo: ${fileData.file_type}
 Tamanho: ${fileData.file_size ? (fileData.file_size / 1024).toFixed(2) + ' KB' : 'N/A'}
 
@@ -318,7 +318,7 @@ Informações do arquivo:
 - Processo: ${fileData.process_id}
 - Enviado em: ${new Date(fileData.uploaded_at).toLocaleString('pt-BR')}`;
       } else {
-        return `Arquivo: ${fileData.name}
+        return `Arquivo: ${fileData.file_name}
 Tipo: ${fileData.file_type || 'Desconhecido'}
 Tamanho: ${fileData.file_size ? (fileData.file_size / 1024).toFixed(2) + ' KB' : 'N/A'}
 
