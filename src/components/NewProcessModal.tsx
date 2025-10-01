@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Upload, Calendar, Building2, FileText, MapPin } from 'lucide-react';
+import { X, Upload, Calendar, Building2, FileText, MapPin, Zap } from 'lucide-react';
 
 interface NewProcessModalProps {
   isOpen: boolean;
@@ -26,6 +26,42 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
 
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
+
+  // Test data for each step
+  const testData = {
+    step1: {
+      licenseType: 'LP',
+      environmentalImpact: 'medio',
+      company: 'Mineração São Paulo Ltda',
+      cnpj: '12.345.678/0001-90',
+      activity: 'Extração de areia e cascalho'
+    },
+    step2: {
+      state: 'SP',
+      city: 'Campinas',
+      location: 'Rodovia Dom Pedro I, km 143, Distrito Industrial',
+      area: '25.5',
+      coordinates: '-22.9056, -47.0608'
+    },
+    step3: {
+      description: 'Empreendimento destinado à extração de areia e cascalho para construção civil, com capacidade de produção de 50.000 m³/mês. O projeto contempla área de lavra de 25,5 hectares, com sistema de drenagem e controle de particulados. Inclui instalação de britador, peneiras e sistema de lavagem do material extraído.',
+      estimatedValue: '2500000'
+    }
+  };
+
+  const fillTestData = (step: number) => {
+    switch (step) {
+      case 1:
+        setFormData(prev => ({ ...prev, ...testData.step1 }));
+        break;
+      case 2:
+        setFormData(prev => ({ ...prev, ...testData.step2 }));
+        break;
+      case 3:
+        setFormData(prev => ({ ...prev, ...testData.step3 }));
+        break;
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -75,7 +111,18 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
 
   const renderStep1 = () => (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-gray-900">Informações Básicas</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-900">Informações Básicas</h3>
+        <button
+          type="button"
+          onClick={() => fillTestData(1)}
+          className="px-3 py-1 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+          title="Preencher com dados de teste"
+        >
+          <Zap className="w-4 h-4" />
+          Dados de Teste
+        </button>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -157,7 +204,18 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
 
   const renderStep2 = () => (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-gray-900">Localização do Empreendimento</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-900">Localização do Empreendimento</h3>
+        <button
+          type="button"
+          onClick={() => fillTestData(2)}
+          className="px-3 py-1 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+          title="Preencher com dados de teste"
+        >
+          <Zap className="w-4 h-4" />
+          Dados de Teste
+        </button>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -263,7 +321,18 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
 
   const renderStep3 = () => (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-gray-900">Detalhes do Projeto</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-900">Detalhes do Projeto</h3>
+        <button
+          type="button"
+          onClick={() => fillTestData(3)}
+          className="px-3 py-1 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+          title="Preencher com dados de teste"
+        >
+          <Zap className="w-4 h-4" />
+          Dados de Teste
+        </button>
+      </div>
       
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -306,7 +375,15 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
 
   const renderStep4 = () => (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-gray-900">Documentação</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-900">Documentação</h3>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-1">
+          <span className="text-xs text-blue-700 flex items-center gap-1">
+            <Zap className="w-3 h-3" />
+            Etapa final - sem dados de teste
+          </span>
+        </div>
+      </div>
       
       <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors">
         <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
