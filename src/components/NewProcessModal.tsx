@@ -97,11 +97,46 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
         submitButton.innerHTML = '⏳ Criando processo...';
       }
 
-      // Submeter o processo
-      await onSubmit(formData);
+      // Submeter o processo e obter o ID do processo criado
+      const createdProcess = await onSubmit(formData);
+      
+      // Se há documentos para upload, fazer upload após criar o processo
+      if (formData.documents.length > 0 && createdProcess?.id) {
+        console.log('📁 Uploading documents for new process:', createdProcess.id);
+        
+        // Importar o DocumentService
+        const { DocumentService } = await import('../services/documentService');
+        const { useAuth } = await import('../contexts/AuthContext');
+        
+        // Obter o usuário atual
+        const { data: { user } } = await import('../lib/supabase').then(m => m.supabase.auth.getUser());
+        
+        if (user) {
+          // Atualizar texto do botão
+          if (submitButton) {
+            submitButton.innerHTML = '📎 Enviando documentos...';
+          }
+          
+          // Upload cada documento
+          for (const file of formData.documents) {
+            try {
+              await DocumentService.uploadDocument(createdProcess.id, file, user.id);
+              console.log('✅ Document uploaded:', file.name);
+            } catch (uploadError) {
+              console.error('❌ Error uploading document:', file.name, uploadError);
+              // Continua com outros documentos mesmo se um falhar
+            }
+          }
+          
+          console.log('✅ All documents processed');
+        }
+      }
       
       // Mostrar mensagem de sucesso
-      alert('✅ Processo criado com sucesso! Você será redirecionado para a lista de processos.');
+      const successMessage = formData.documents.length > 0 
+        ? `✅ Processo criado com sucesso! ${formData.documents.length} documento(s) anexado(s).`
+        : '✅ Processo criado com sucesso!';
+      alert(successMessage);
       
       // Fechar modal e resetar formulário
       onClose();

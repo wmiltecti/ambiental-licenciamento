@@ -86,11 +86,13 @@ function AppContent() {
 
   const handleNewProcess = async (processData: any) => {
     try {
-      await ProcessService.createProcess(processData);
+      const createdProcess = await ProcessService.createProcess(processData);
       loadProcesses();
       loadStats();
+      return createdProcess; // Retornar o processo criado para que o modal possa usar o ID
     } catch (error) {
       console.error('Error creating process:', error);
+      throw error; // Re-throw para que o modal possa tratar o erro
     }
   };
 

@@ -214,6 +214,7 @@ export class ProcessService {
       throw error;
     }
 
+    console.log('✅ Process created successfully:', data);
     return data;
   }
 
