@@ -37,6 +37,7 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
   // Load documents when modal opens
   React.useEffect(() => {
     if (process?.id && isOpen) {
+      console.log('🔄 ProcessDetailsModal opened, loading data for process:', process.id);
       loadDocuments();
       loadUserPermission();
       loadComments();
@@ -50,20 +51,13 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
     }
 
     try {
-      console.log('📂 Loading documents for process:', process.id);
+      console.log('📂 Starting document load for process:', process.id);
       const docs = await DocumentService.getProcessDocuments(process.id);
-      console.log('✅ Documents loaded from database:', {
-        processId: process.id,
-        count: docs.length,
-        documents: docs.map(d => ({ id: d.id, file_name: d.file_name }))
-      });
+      console.log('✅ Documents loaded successfully:', docs.length, 'documents');
       setDocuments(docs);
     } catch (error) {
       console.error('❌ Error loading documents:', error);
-      console.error('Load error details:', { 
-        processId: process.id, 
-        error: error.message 
-      });
+      alert('Erro ao carregar documentos: ' + (error as Error).message);
       setDocuments([]); // Reset documents on error
     }
   };
@@ -583,6 +577,7 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
                       className="text-blue-600 hover:text-blue-700 text-sm px-3 py-1 border border-blue-300 rounded hover:bg-blue-50"
                       onClick={async () => {
                         try {
+                          console.log('🔽 Download button clicked for document:', doc.id);
                           await DocumentService.downloadDocument(doc);
                         } catch (error) {
                           console.error('Error downloading document:', error);

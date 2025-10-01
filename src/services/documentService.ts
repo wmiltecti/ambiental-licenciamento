@@ -19,6 +19,8 @@ export class DocumentService {
       throw new Error('Process ID is required');
     }
 
+    console.log('🔍 Loading documents for process:', processId);
+
     const { data, error } = await supabase
       .from('process_documents')
       .select('*')
@@ -31,10 +33,18 @@ export class DocumentService {
       throw error;
     }
 
-    console.log('Documents loaded:', data?.length || 0);
+    console.log('✅ Documents loaded from database:', {
+      processId,
+      count: data?.length || 0,
+      documents: data?.map(d => ({ 
+        id: d.id, 
+        file_name: d.file_name, 
+        file_path: d.file_path,
+        user_id: d.user_id 
+      })) || []
+    });
 
-    // Add mock user data since we don't have user relation in documents table
-    return data.map(doc => ({
+    return (data || []).map(doc => ({
       ...doc,
       users: {
         id: 'user',
@@ -224,35 +234,50 @@ export class DocumentService {
 
   static async downloadDocument(fileData: any): Promise<void> {
     try {
-      console.log('Starting download for:', fileData);
+      console.log('🔽 Starting download for:', {
+        id: fileData.id,
+        file_name: fileData.file_name,
+        file_path: fileData.file_path,
+        file_type: fileData.file_type
+      });
       
       // PRODUCTION: Download from Supabase Storage
       if (fileData.file_path) {
+        console.log('📁 Downloading from storage path:', fileData.file_path);
+        
         const { data, error } = await supabase.storage
           .from('documents')
           .download(fileData.file_path);
         
         if (error) {
           console.error('Storage download error:', error);
+          console.error('Download error details:', {
+            file_path: fileData.file_path,
+            bucket: 'documents',
+            error_code: error.message
+          });
           throw new Error(`Erro ao baixar arquivo: ${error.message}`);
         }
+        
+        console.log('✅ File downloaded from storage, creating download link');
         
         // Create download link
         const url = URL.createObjectURL(data);
         const link = document.createElement('a');
         link.href = url;
-        link.download = fileData.file_name;
+        link.download = fileData.file_name || 'documento';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         
-        console.log('Document downloaded successfully:', fileData.name);
+        console.log('✅ Document downloaded successfully:', fileData.file_name);
         return;
       }
       
       // Fallback: If no file_path, show error
-      throw new Error('Caminho do arquivo não encontrado');
+      console.error('❌ No file_path found in document data:', fileData);
+      throw new Error('Caminho do arquivo não encontrado. Documento pode estar corrompido.');
       
     } catch (error) {
       console.error('Error downloading document:', error);
