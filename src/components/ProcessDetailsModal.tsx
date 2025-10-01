@@ -55,7 +55,7 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
       console.log('✅ Documents loaded from database:', {
         processId: process.id,
         count: docs.length,
-        documents: docs.map(d => ({ id: d.id, name: d.name }))
+        documents: docs.map(d => ({ id: d.id, file_name: d.file_name }))
       });
       setDocuments(docs);
     } catch (error) {
@@ -154,7 +154,7 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
     }
 
     const documentToDelete = documents.find(doc => doc.id === documentId);
-    const confirmMessage = `Tem certeza que deseja excluir o documento "${documentToDelete?.name || 'documento'}"?`;
+    const confirmMessage = `Tem certeza que deseja excluir o documento "${documentToDelete?.file_name || 'documento'}"?`;
     
     if (!window.confirm(confirmMessage)) {
       console.log('User cancelled document deletion');
@@ -163,7 +163,7 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
 
     console.log('🗑️ User confirmed deletion of document:', { 
       id: documentId, 
-      name: documentToDelete?.name,
+      file_name: documentToDelete?.file_name,
       currentDocsCount: documents.length 
     });
     
@@ -200,7 +200,7 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
       console.error('❌ Error deleting document:', error);
       console.error('Delete error details:', { 
         documentId, 
-        documentName: documentToDelete?.name,
+        documentName: documentToDelete?.file_name,
         error: error.message 
       });
       alert('Erro ao excluir documento: ' + (error as Error).message);
@@ -559,7 +559,7 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
                   <div className="flex items-center space-x-3">
                     <FileText className="w-8 h-8 text-gray-400" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{doc.name}</p>
+                      <p className="text-sm font-medium text-gray-900">{doc.file_name}</p>
                       <div className="flex items-center space-x-4 text-xs text-gray-500">
                         <span>{doc.file_type || 'Arquivo'}</span>
                         {doc.file_size && (
@@ -634,7 +634,7 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
             'Memorial Descritivo'
           ].map((requiredDoc, index) => {
             const hasDoc = documents.some(doc => 
-              doc.name.toLowerCase().includes(requiredDoc.toLowerCase().split(' ')[0])
+              doc.file_name.toLowerCase().includes(requiredDoc.toLowerCase().split(' ')[0])
             );
             return (
               <div key={index} className="flex items-center space-x-2">

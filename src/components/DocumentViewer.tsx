@@ -90,7 +90,7 @@ export default function DocumentViewer({ isOpen, onClose, document }: DocumentVi
           <div className="text-center">
             <Image className="w-16 h-16 text-blue-400 mx-auto mb-4" />
             <p className="text-lg font-medium text-gray-900">Imagem: {document.name}</p>
-            <p className="text-sm text-gray-500 mt-2">{document.name}</p>
+            <p className="text-sm text-gray-500 mt-2">{document.file_name}</p>
             <div className="mt-4 p-4 bg-gray-50 rounded-lg border max-w-md mx-auto">
               <p className="text-sm text-gray-700 whitespace-pre-line">{content}</p>
             </div>
@@ -111,7 +111,7 @@ export default function DocumentViewer({ isOpen, onClose, document }: DocumentVi
           <div className="text-center mb-6">
             <FileText className="w-16 h-16 text-red-400 mx-auto mb-4" />
             <p className="text-lg font-medium text-gray-900">Documento PDF</p>
-            <p className="text-sm text-gray-500">{document.name}</p>
+            <p className="text-sm text-gray-500">{document.file_name}</p>
           </div>
           <div className="bg-white p-4 rounded-lg border shadow-sm">
             <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{content}</p>
@@ -124,7 +124,7 @@ export default function DocumentViewer({ isOpen, onClose, document }: DocumentVi
           <div className="text-center mb-6">
             <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <p className="text-lg font-medium text-gray-900">Arquivo de Texto</p>
-            <p className="text-sm text-gray-500">{document.name}</p>
+            <p className="text-sm text-gray-500">{document.file_name}</p>
           </div>
           <div className="bg-white p-4 rounded-lg border shadow-sm font-mono text-sm">
             <pre className="text-gray-800 whitespace-pre-wrap leading-relaxed">{content}</pre>
@@ -136,8 +136,8 @@ export default function DocumentViewer({ isOpen, onClose, document }: DocumentVi
         <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
           <div className="text-center">
             <File className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-lg font-medium text-gray-900">Arquivo: {document.name}</p>
-            <p className="text-sm text-gray-500 mt-2">{document.name}</p>
+            <p className="text-lg font-medium text-gray-900">Arquivo: {document.file_name}</p>
+            <p className="text-sm text-gray-500 mt-2">{document.file_name}</p>
             <p className="text-xs text-gray-400 mt-1">Tipo: {document.file_type}</p>
             <div className="mt-4 p-4 bg-gray-50 rounded-lg border max-w-md mx-auto">
               <p className="text-sm text-gray-700 whitespace-pre-line">{content}</p>
@@ -170,7 +170,7 @@ export default function DocumentViewer({ isOpen, onClose, document }: DocumentVi
           <div className="flex items-center space-x-3">
             {getFileIcon(document.file_type || '')}
             <div>
-              <h2 className="text-xl font-bold text-gray-900">{document.name}</h2>
+              <h2 className="text-xl font-bold text-gray-900">{document.file_name}</h2>
               <div className="flex items-center space-x-4 text-sm text-gray-500">
                 <span>{document.file_type || 'Tipo desconhecido'}</span>
                 <span>{formatFileSize(document.file_size)}</span>
