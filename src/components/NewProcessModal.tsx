@@ -101,24 +101,53 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
       return;
     }
 
-    await onSubmit(formData);
-    onClose();
-    setFormData({
-      licenseType: 'LP',
-      company: '',
-      cnpj: '',
-      activity: '',
-      location: '',
-      state: '',
-      city: '',
-      description: '',
-      estimatedValue: '',
-      area: '',
-      coordinates: '',
-      environmentalImpact: 'baixo',
-      documents: []
-    });
-    setCurrentStep(1);
+    try {
+      // Mostrar feedback visual de que está processando
+      const submitButton = document.querySelector('[data-submit-button]') as HTMLButtonElement;
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '⏳ Criando processo...';
+      }
+
+      // Submeter o processo
+      await onSubmit(formData);
+      
+      // Mostrar mensagem de sucesso
+      alert('✅ Processo criado com sucesso! Você será redirecionado para a lista de processos.');
+      
+      // Fechar modal e resetar formulário
+      onClose();
+      setFormData({
+        licenseType: 'LP',
+        company: '',
+        cnpj: '',
+        activity: '',
+        location: '',
+        state: '',
+        city: '',
+        description: '',
+        estimatedValue: '',
+        area: '',
+        coordinates: '',
+        environmentalImpact: 'baixo',
+        documents: []
+      });
+      setCurrentStep(1);
+      
+      // Redirecionar para a tela de processos (se não estiver já)
+      // Isso será feito pelo componente pai (App.tsx) automaticamente
+      
+    } catch (error) {
+      console.error('Erro ao criar processo:', error);
+      alert('❌ Erro ao criar processo: ' + (error as Error).message);
+      
+      // Restaurar botão em caso de erro
+      const submitButton = document.querySelector('[data-submit-button]') as HTMLButtonElement;
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.innerHTML = '🎯 Finalizar Cadastro do Processo';
+      }
+    }
   };
 
   const nextStep = () => {
@@ -464,6 +493,17 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
           <li>• Planta de situação e localização</li>
           <li>• Memorial descritivo do empreendimento</li>
         </ul>
+        <div className="mt-3 pt-3 border-t border-yellow-300">
+          <p className="text-sm text-yellow-800 font-medium">
+            📋 Como finalizar o cadastro:
+          </p>
+          <ol className="text-sm text-yellow-800 mt-2 space-y-1 ml-4">
+            <li>1. Anexe os documentos obrigatórios (recomendado)</li>
+            <li>2. Clique em "Finalizar Cadastro do Processo"</li>
+            <li>3. O sistema criará o processo e retornará à lista</li>
+            <li>4. Você poderá adicionar mais documentos depois</li>
+          </ol>
+        </div>
       </div>
     </div>
   );
@@ -528,6 +568,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
                 <div className="flex space-x-3">
                   <button
                     type="button"
+                    data-submit-button
                     onClick={() => {
                       const hasDocuments = formData.documents.length > 0;
                       
@@ -544,9 +585,9 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
                       
                       handleSubmit(new Event('submit') as any);
                     }}
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                   >
-                    Criar Processo
+                    🎯 Finalizar Cadastro do Processo
                   </button>
                   {formData.documents.length === 0 && (
                     <div className="flex items-center text-sm text-amber-600">
