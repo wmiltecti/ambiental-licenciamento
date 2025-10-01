@@ -572,16 +572,15 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
                   onClick={nextStep}
                   className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
-                  {currentStep === 3 ? 'Próximo' : 'Próximo'}
+                  Próximo
                 </button>
               ) : (
                 <button
-                  type="button"
-                  onClick={nextStep}
+                  type="submit"
                   data-submit-button
                   className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                 >
-                  Próximo
+                  💾 Salvar
                 </button>
               )}
             </div>
