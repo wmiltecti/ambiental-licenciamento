@@ -514,130 +514,39 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Novo Processo de Licenciamento</h2>
-            <p className="text-sm text-gray-500">Passo {currentStep} de {totalSteps}</p>
+            {currentStep === 4 && renderStep4()}
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
 
-        {/* Progress Bar */}
-        <div className="px-6 py-4 bg-gray-50">
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-green-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-            ></div>
-          </div>
-        </div>
-
-        {/* Content */}
-        <form onSubmit={handleSubmit} className="flex flex-col h-full">
-          <div className="flex-1 p-6 overflow-y-auto">
-            {currentStep === 1 && renderStep1()}
-            {currentStep === 2 && renderStep2()}
-            {currentStep === 3 && renderStep3()}
+          {/* Footer with Navigation Buttons */}
+          <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
+            <div className="flex space-x-3">
+              {currentStep > 1 && (
                 <button
                   type="button"
-                  onClick={async () => {
-                    const hasDocuments = formData.documents.length > 0;
-                    
-                    if (!hasDocuments) {
-                      const confirmSubmit = window.confirm(
-                        'Você não anexou nenhum documento. Deseja criar o processo mesmo assim? ' +
-                        'Você poderá adicionar documentos depois.'
-                      );
-                      
-                      if (!confirmSubmit) {
-                        return;
-                      }
-                    }
-                    
-                    try {
-                      // Mostrar feedback visual
-                      const button = document.querySelector('[data-finalize-button]') as HTMLButtonElement;
-                      if (button) {
-                        button.disabled = true;
-                        button.innerHTML = '⏳ Criando processo...';
-                      }
+                  onClick={prevStep}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Anterior
+                </button>
+              )}
+            </div>
 
-                      // Submeter o processo
-                      await onSubmit(formData);
-                      
-                      // Mostrar mensagem de sucesso
-                      alert('✅ Processo criado com sucesso! Você será redirecionado para a lista de processos.');
-                      
-                      // Fechar modal e resetar formulário
-                      onClose();
-                      setFormData({
-                        licenseType: 'LP',
-                        company: '',
-                        cnpj: '',
-                        activity: '',
-                        location: '',
-                        state: '',
-                        city: '',
-                        description: '',
-                        estimatedValue: '',
-                        area: '',
-                        coordinates: '',
-                        environmentalImpact: 'baixo',
-                        documents: []
-                      });
-                      setCurrentStep(1);
-                      
-                    } catch (error) {
-                      console.error('Erro ao criar processo:', error);
-                      alert('❌ Erro ao criar processo: ' + (error as Error).message);
-                      
-                      // Restaurar botão em caso de erro
-                      const button = document.querySelector('[data-finalize-button]') as HTMLButtonElement;
-                      if (button) {
-                        button.disabled = false;
-                        button.innerHTML = '🎯 Finalizar Cadastro do Processo';
-                      }
-                    }
-                  }}
-                  data-finalize-button
+            <div className="flex items-center space-x-4">
+              {currentStep < totalSteps ? (
+                <button
+                  type="button"
+                  onClick={nextStep}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Próximo
+                </button>
+              ) : (
+                <button
+                  type="submit"
                   className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                 >
                   🎯 Finalizar Cadastro do Processo
                 </button>
-              ) : (
-                <div className="flex space-x-3">
-                  <button
-                    type="button"
-                    data-submit-button
-                    onClick={() => {
-                      const hasDocuments = formData.documents.length > 0;
-                      
-                      if (!hasDocuments) {
-                        const confirmSubmit = window.confirm(
-                          'Você não anexou nenhum documento. Deseja criar o processo mesmo assim? ' +
-                          'Você poderá adicionar documentos depois.'
-                        );
-                        
-                        if (!confirmSubmit) {
-                          return;
-                        }
-                      }
-                      
-                      handleSubmit(new Event('submit') as any);
-                    }}
-                    className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-                  >
-                    🎯 Finalizar Cadastro do Processo
-                  </button>
-                  {formData.documents.length === 0 && (
-                    <div className="flex items-center text-sm text-amber-600">
-                      <span>⚠️ Nenhum documento anexado</span>
-                    </div>
-                  )}
-                </div>
               )}
             </div>
           </div>
