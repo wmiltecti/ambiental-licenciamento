@@ -88,18 +88,6 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
     }
 
     // Só salva quando estiver na última etapa (step 4)
-    const hasDocuments = formData.documents.length > 0;
-    
-    if (!hasDocuments) {
-      const confirmSubmit = window.confirm(
-        'Você não anexou nenhum documento. Deseja criar o processo mesmo assim? ' +
-        'Você poderá adicionar documentos depois.'
-      );
-      
-      if (!confirmSubmit) {
-        return; // Não submete, mantém o modal aberto
-      }
-    }
 
     try {
       // Mostrar feedback visual de que está processando
