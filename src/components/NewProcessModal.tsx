@@ -541,28 +541,71 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
             {currentStep === 1 && renderStep1()}
             {currentStep === 2 && renderStep2()}
             {currentStep === 3 && renderStep3()}
-            {currentStep === 4 && renderStep4()}
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
-            <button
-              type="button"
-              onClick={prevStep}
-              disabled={currentStep === 1}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Anterior
-            </button>
-            
-            <div className="flex space-x-3">
-              {currentStep < totalSteps ? (
                 <button
                   type="button"
-                  onClick={nextStep}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  onClick={async () => {
+                    const hasDocuments = formData.documents.length > 0;
+                    
+                    if (!hasDocuments) {
+                      const confirmSubmit = window.confirm(
+                        'Você não anexou nenhum documento. Deseja criar o processo mesmo assim? ' +
+                        'Você poderá adicionar documentos depois.'
+                      );
+                      
+                      if (!confirmSubmit) {
+                        return;
+                      }
+                    }
+                    
+                    try {
+                      // Mostrar feedback visual
+                      const button = document.querySelector('[data-finalize-button]') as HTMLButtonElement;
+                      if (button) {
+                        button.disabled = true;
+                        button.innerHTML = '⏳ Criando processo...';
+                      }
+
+                      // Submeter o processo
+                      await onSubmit(formData);
+                      
+                      // Mostrar mensagem de sucesso
+                      alert('✅ Processo criado com sucesso! Você será redirecionado para a lista de processos.');
+                      
+                      // Fechar modal e resetar formulário
+                      onClose();
+                      setFormData({
+                        licenseType: 'LP',
+                        company: '',
+                        cnpj: '',
+                        activity: '',
+                        location: '',
+                        state: '',
+                        city: '',
+                        description: '',
+                        estimatedValue: '',
+                        area: '',
+                        coordinates: '',
+                        environmentalImpact: 'baixo',
+                        documents: []
+                      });
+                      setCurrentStep(1);
+                      
+                    } catch (error) {
+                      console.error('Erro ao criar processo:', error);
+                      alert('❌ Erro ao criar processo: ' + (error as Error).message);
+                      
+                      // Restaurar botão em caso de erro
+                      const button = document.querySelector('[data-finalize-button]') as HTMLButtonElement;
+                      if (button) {
+                        button.disabled = false;
+                        button.innerHTML = '🎯 Finalizar Cadastro do Processo';
+                      }
+                    }
+                  }}
+                  data-finalize-button
+                  className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                 >
-                  Próximo
+                  🎯 Finalizar Cadastro do Processo
                 </button>
               ) : (
                 <div className="flex space-x-3">
