@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { toast } from 'react-hot-toast';
 
 interface AuthContextType {
   user: User | null;
@@ -24,7 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    const initAuth = async () => {
+    const initializeAuth = async () => {
       if (!isConfigured) {
         if (mounted) {
           setLoading(false);
@@ -37,23 +38,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (mounted) {
           if (error) {
-            console.warn('Auth session error:', error.message);
+            console.error('Session error:', error);
+            // Clear invalid session data
+            await supabase.auth.signOut();
+            setSession(null);
+            setUser(null);
+          } else {
+            setSession(session);
+            setUser(session?.user ?? null);
           }
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
         }
-      } catch (err) {
-        console.warn('Auth initialization error:', err);
+      } catch (error) {
+        console.error('Auth initialization error:', error);
         if (mounted) {
+          // Clear any corrupted session data
+          await supabase.auth.signOut();
           setSession(null);
           setUser(null);
+        }
+      } finally {
+        if (mounted) {
           setLoading(false);
         }
       }
     };
 
-    initAuth();
+    initializeAuth();
 
     // Listen for auth changes only if configured
     let subscription: any = null;
@@ -61,9 +71,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
           if (mounted) {
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
+            try {
+              if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+                setSession(session);
+                setUser(session?.user ?? null);
+              } else if (event === 'SIGNED_IN') {
+                setSession(session);
+                setUser(session?.user ?? null);
+              } else {
+                setSession(session);
+                setUser(session?.user ?? null);
+              }
+            } catch (error) {
+              console.error('Auth state change error:', error);
+              // Handle auth errors by clearing session
+              setSession(null);
+              setUser(null);
+            } finally {
+              setLoading(false);
+            }
           }
         }
       );
@@ -83,21 +109,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error('Sistema não configurado. Entre em contato com o administrador.');
     }
     
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    if (error) {
-      if (error.message.includes('Invalid login credentials')) {
-        throw new Error('Email ou senha incorretos. Verifique suas credenciais e tente novamente.');
-      } else if (error.message.includes('Email not confirmed')) {
-        throw new Error('Email não confirmado. Verifique sua caixa de entrada e confirme seu email antes de fazer login.');
-      } else if (error.message.includes('Too many requests')) {
-        throw new Error('Muitas tentativas de login. Aguarde alguns minutos e tente novamente.');
-      } else {
-        throw new Error(`Erro no login: ${error.message}`);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        console.error('Sign in error:', error);
+        if (error.message.includes('Invalid login credentials')) {
+          throw new Error('Email ou senha incorretos. Verifique suas credenciais e tente novamente.');
+        } else if (error.message.includes('Email not confirmed')) {
+          throw new Error('Email não confirmado. Verifique sua caixa de entrada e confirme seu email antes de fazer login.');
+        } else if (error.message.includes('Too many requests')) {
+          throw new Error('Muitas tentativas de login. Aguarde alguns minutos e tente novamente.');
+        } else {
+          throw new Error(`Erro no login: ${error.message}`);
+        }
       }
+    } catch (error) {
+      console.error('Sign in exception:', error);
+      throw error;
     }
   };
 
@@ -106,38 +138,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error('Sistema não configurado. Entre em contato com o administrador.');
     }
     
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name: name,
-          role: role
-        },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name,
+            role: role
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        }
+      });
+      
+      if (error) {
+        console.error('Sign up error:', error);
+        if (error.message.includes('User already registered')) {
+          throw new Error('Este email já está cadastrado. Tente fazer login ou use outro email.');
+        } else if (error.message.includes('Invalid email')) {
+          throw new Error('Email inválido. Verifique o formato do email.');
+        } else if (error.message.includes('Password should be at least')) {
+          throw new Error('A senha deve ter pelo menos 6 caracteres.');
+        } else {
+          throw new Error(`Erro no cadastro: ${error.message}`);
+        }
       }
-    });
-    
-    if (error) {
-      if (error.message.includes('User already registered')) {
-        throw new Error('Este email já está cadastrado. Tente fazer login ou use outro email.');
-      } else if (error.message.includes('Invalid email')) {
-        throw new Error('Email inválido. Verifique o formato do email.');
-      } else if (error.message.includes('Password should be at least')) {
-        throw new Error('A senha deve ter pelo menos 6 caracteres.');
-      } else {
-        throw new Error(`Erro no cadastro: ${error.message}`);
+      
+      if (data.user && !data.user.email_confirmed_at && !data.session) {
+        throw new Error('Cadastro realizado! Verifique seu email para confirmar a conta antes de fazer login.');
       }
-    }
-    
-    if (data.user && !data.user.email_confirmed_at && !data.session) {
-      throw new Error('Cadastro realizado! Verifique seu email para confirmar a conta antes de fazer login.');
+    } catch (error) {
+      console.error('Sign up exception:', error);
+      throw error;
     }
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Sign out error:', error);
+      }
+      
+      // Always clear local state regardless of API response
+      setSession(null);
+      setUser(null);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Sign out exception:', error);
+      // Clear local state even if API call fails
+      setSession(null);
+      setUser(null);
+      throw error;
+    }
   };
 
   const value = {
