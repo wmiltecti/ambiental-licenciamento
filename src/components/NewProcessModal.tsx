@@ -468,6 +468,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
                 <span className="text-sm text-gray-900">{file.name}</span>
               </div>
               <button
+                type="button"
                 onClick={() => {
                   setFormData(prev => ({
                     ...prev,
@@ -514,6 +515,39 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
+            <h2 className="text-xl font-semibold text-gray-900">Novo Processo de Licenciamento</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Etapa {currentStep} de {totalSteps}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="px-6 py-4 bg-gray-50">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">Progresso</span>
+            <span className="text-sm text-gray-500">{Math.round((currentStep / totalSteps) * 100)}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-green-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          {/* Content */}
+          <div className="p-6 max-h-[60vh] overflow-y-auto">
+            {currentStep === 1 && renderStep1()}
+            {currentStep === 2 && renderStep2()}
+            {currentStep === 3 && renderStep3()}
             {currentStep === 4 && renderStep4()}
           </div>
 
@@ -543,6 +577,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
               ) : (
                 <button
                   type="submit"
+                  data-submit-button
                   className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                 >
                   🎯 Finalizar Cadastro do Processo
