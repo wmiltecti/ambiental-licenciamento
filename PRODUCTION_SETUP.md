@@ -2,35 +2,91 @@
 
 ## 📋 Pré-requisitos
 
-### 1. Configurar Supabase Storage
+### 1. Executar Migrations do Banco de Dados
+
+Execute na ordem no Supabase SQL Editor:
+
+#### Migration 1: Adicionar Campos ao Processo
 ```sql
--- No painel do Supabase, execute:
--- 1. Vá para Storage
--- 2. Crie um bucket chamado "documents"
--- 3. Configure as políticas de segurança:
-
--- Política para upload (usuários autenticados podem fazer upload)
-CREATE POLICY "Users can upload documents" ON storage.objects
-FOR INSERT TO authenticated
-WITH CHECK (bucket_id = 'documents' AND auth.uid()::text = (storage.foldername(name))[1]);
-
--- Política para download (usuários podem baixar seus próprios documentos)
-CREATE POLICY "Users can download own documents" ON storage.objects
-FOR SELECT TO authenticated
-USING (bucket_id = 'documents' AND auth.uid()::text = (storage.foldername(name))[1]);
-
--- Política para exclusão (usuários podem excluir seus próprios documentos)
-CREATE POLICY "Users can delete own documents" ON storage.objects
-FOR DELETE TO authenticated
-USING (bucket_id = 'documents' AND auth.uid()::text = (storage.foldername(name))[1]);
+-- Arquivo: supabase/migrations/add_process_fields.sql
+-- Adiciona campos: location, area, coordinates, environmental_impact, estimated_value
 ```
 
-### 2. Variáveis de Ambiente
+#### Migration 2: Criar Bucket de Storage
+```sql
+-- Arquivo: supabase/migrations/create_docs_storage_bucket.sql
+-- Cria bucket privado 'docs' com políticas RLS
+```
+
+#### Migration 3: Adicionar Campos de Procuração
+```sql
+-- Arquivo: supabase/migrations/add_procuracao_fields.sql
+-- Adiciona campos para upload de procuração
+```
+
+### 2. Deploy Edge Function
+
+**Via Supabase Dashboard:**
+1. Acesse Edge Functions
+2. New Function → Nome: `getSignedUploadUrl`
+3. Cole código de `supabase/functions/getSignedUploadUrl/index.ts`
+4. Deploy
+
+**Via CLI (opcional):**
+```bash
+supabase functions deploy getSignedUploadUrl
+```
+
+### 3. Variáveis de Ambiente
 Certifique-se que o arquivo `.env` contém:
 ```env
 VITE_SUPABASE_URL=sua_url_do_supabase
 VITE_SUPABASE_ANON_KEY=sua_chave_anonima
 ```
+
+## 🔄 Fluxo de Criação de Processo
+
+### Wizard de 4 Passos
+
+**Passo 1 - Informações Básicas:**
+- Tipo de Licença (LP/LI/LO)
+- Impacto Ambiental
+- Razão Social, CNPJ, Atividade
+- ✅ Validação: campos obrigatórios
+
+**Passo 2 - Localização:**
+- Estado, Município, Endereço
+- Área e Coordenadas GPS (opcionais)
+- ✅ Validação: localização completa
+
+**Passo 3 - Detalhes do Projeto:**
+- Descrição detalhada
+- Valor estimado (opcional)
+- ✅ Validação: descrição obrigatória
+
+**Passo 4 - Documentação:**
+- Upload de múltiplos PDFs/documentos
+- Lista de documentos obrigatórios
+- ✅ Validação: opcional (pode criar sem docs)
+
+### Salvamento no Banco
+
+Quando o usuário clica em **"Criar Processo"**:
+
+1. **Valida** todos os campos obrigatórios
+2. **Cria empresa** na tabela `companies`
+3. **Cria processo** na tabela `license_processes` com todos os dados:
+   - Informações básicas
+   - Localização completa
+   - Detalhes do projeto
+   - Status inicial: `submitted`
+   - Progresso: 0%
+4. **Faz upload** de documentos (se houver):
+   - Para cada arquivo:
+     - Obtém URL assinada via Edge Function
+     - Upload direto para Storage (bucket 'docs')
+     - Salva metadados em `process_documents`
+5. **Atualiza UI** automaticamente
 
 ## 🔧 Passos para Deploy
 

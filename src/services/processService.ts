@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { CollaborationService } from './collaborationService';
+import { UploadService } from './uploadService';
 import type { Database } from '../lib/supabase';
 
 // Types based on actual database schema
@@ -159,9 +160,11 @@ export class ProcessService {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
+    console.log('Creating process with data:', processData);
+
     // First, create or get the company
     let companyId = processData.companyId;
-    
+
     if (!companyId) {
       const { data: company, error: companyError } = await supabase
         .from('companies')
@@ -181,8 +184,9 @@ export class ProcessService {
         console.error('Error creating company:', companyError);
         throw companyError;
       }
-      
+
       companyId = company.id;
+      console.log('Company created with ID:', companyId);
     }
 
     // Calculate expected date (6 months for LP/LI, 3 years for LO)
@@ -200,7 +204,12 @@ export class ProcessService {
       status: 'submitted',
       progress: 0,
       submit_date: new Date().toISOString().split('T')[0],
-      expected_date: expectedDate.toISOString().split('T')[0]
+      expected_date: expectedDate.toISOString().split('T')[0],
+      location: processData.location,
+      area: processData.area ? parseFloat(processData.area) : null,
+      coordinates: processData.coordinates || null,
+      environmental_impact: processData.environmentalImpact || 'baixo',
+      estimated_value: processData.estimatedValue ? parseFloat(processData.estimatedValue) : null
     };
 
     const { data, error } = await supabase
@@ -214,7 +223,59 @@ export class ProcessService {
       throw error;
     }
 
+    console.log('Process created with ID:', data.id);
+
+    // Upload documents if any
+    if (processData.documents && processData.documents.length > 0) {
+      console.log('Uploading', processData.documents.length, 'documents...');
+      await this.uploadProcessDocuments(data.id, processData.documents);
+    }
+
     return data;
+  }
+
+  static async uploadProcessDocuments(processId: string, files: File[]): Promise<void> {
+    try {
+      console.log('Starting upload of', files.length, 'files for process:', processId);
+
+      const uploadPromises = files.map(async (file) => {
+        console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
+
+        const result = await UploadService.uploadFile(processId, file);
+
+        if (!result.success) {
+          console.error('Failed to upload file:', file.name, result.error);
+          throw new Error(`Erro ao fazer upload de ${file.name}: ${result.error}`);
+        }
+
+        console.log('File uploaded successfully:', file.name, 'Path:', result.storagePath);
+
+        // Save document metadata to database
+        const { error: docError } = await supabase
+          .from('process_documents')
+          .insert({
+            process_id: processId,
+            name: file.name,
+            file_path: result.storagePath!,
+            file_size: file.size,
+            file_type: file.type,
+            uploaded_by: (await supabase.auth.getUser()).data.user!.id
+          });
+
+        if (docError) {
+          console.error('Error saving document metadata:', docError);
+          throw docError;
+        }
+
+        console.log('Document metadata saved for:', file.name);
+      });
+
+      await Promise.all(uploadPromises);
+      console.log('All documents uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading process documents:', error);
+      throw error;
+    }
   }
 
   static async updateProcess(id: string, updates: Partial<ProcessUpdate>): Promise<Process> {

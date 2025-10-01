@@ -25,6 +25,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
   });
 
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = 4;
 
   if (!isOpen) return null;
@@ -45,27 +46,61 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    await onSubmit(formData);
-    onClose();
-    setFormData({
-      licenseType: 'LP',
-      company: '',
-      cnpj: '',
-      activity: '',
-      location: '',
-      state: '',
-      city: '',
-      description: '',
-      estimatedValue: '',
-      area: '',
-      coordinates: '',
-      environmentalImpact: 'baixo',
-      documents: []
-    });
-    setCurrentStep(1);
+    if (!validateCurrentStep()) {
+      alert('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      console.log('Submitting process with data:', formData);
+      await onSubmit(formData);
+
+      setFormData({
+        licenseType: 'LP',
+        company: '',
+        cnpj: '',
+        activity: '',
+        location: '',
+        state: '',
+        city: '',
+        description: '',
+        estimatedValue: '',
+        area: '',
+        coordinates: '',
+        environmentalImpact: 'baixo',
+        documents: []
+      });
+      setCurrentStep(1);
+      onClose();
+    } catch (error) {
+      console.error('Error submitting process:', error);
+      alert('Erro ao criar processo: ' + (error as Error).message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const validateCurrentStep = () => {
+    switch (currentStep) {
+      case 1:
+        return formData.company && formData.cnpj && formData.activity;
+      case 2:
+        return formData.state && formData.city && formData.location;
+      case 3:
+        return formData.description;
+      case 4:
+        return true;
+      default:
+        return true;
+    }
   };
 
   const nextStep = () => {
+    if (!validateCurrentStep()) {
+      alert('Por favor, preencha todos os campos obrigatórios antes de continuar.');
+      return;
+    }
     if (currentStep < totalSteps) setCurrentStep(currentStep + 1);
   };
 
@@ -430,9 +465,17 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
               ) : (
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                 >
-                  Criar Processo
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    'Criar Processo'
+                  )}
                 </button>
               )}
             </div>
