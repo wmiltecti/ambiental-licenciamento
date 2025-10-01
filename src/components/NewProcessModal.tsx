@@ -576,8 +576,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
                 </button>
               ) : (
                 <button
-                  type="button"
-                  onClick={handleSubmit}
+                  type="submit"
                   onClick={nextStep}
                   data-submit-button
                   className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
