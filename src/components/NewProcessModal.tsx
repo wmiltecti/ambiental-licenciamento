@@ -80,6 +80,26 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Se estiver na última etapa, só submete se o usuário realmente quiser
+    if (currentStep === totalSteps) {
+      const hasDocuments = formData.documents.length > 0;
+      
+      if (!hasDocuments) {
+        const confirmSubmit = window.confirm(
+          'Você não anexou nenhum documento. Deseja criar o processo mesmo assim? ' +
+          'Você poderá adicionar documentos depois.'
+        );
+        
+        if (!confirmSubmit) {
+          return; // Não submete, mantém o modal aberto
+        }
+      }
+    } else {
+      // Se não estiver na última etapa, apenas avança
+      nextStep();
+      return;
+    }
 
     await onSubmit(formData);
     onClose();
@@ -505,12 +525,35 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
                   Próximo
                 </button>
               ) : (
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  Criar Processo
-                </button>
+                <div className="flex space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const hasDocuments = formData.documents.length > 0;
+                      
+                      if (!hasDocuments) {
+                        const confirmSubmit = window.confirm(
+                          'Você não anexou nenhum documento. Deseja criar o processo mesmo assim? ' +
+                          'Você poderá adicionar documentos depois.'
+                        );
+                        
+                        if (!confirmSubmit) {
+                          return;
+                        }
+                      }
+                      
+                      handleSubmit(new Event('submit') as any);
+                    }}
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Criar Processo
+                  </button>
+                  {formData.documents.length === 0 && (
+                    <div className="flex items-center text-sm text-amber-600">
+                      <span>⚠️ Nenhum documento anexado</span>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
