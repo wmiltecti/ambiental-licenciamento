@@ -81,24 +81,24 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Se estiver na última etapa, só submete se o usuário realmente quiser
-    if (currentStep === totalSteps) {
-      const hasDocuments = formData.documents.length > 0;
-      
-      if (!hasDocuments) {
-        const confirmSubmit = window.confirm(
-          'Você não anexou nenhum documento. Deseja criar o processo mesmo assim? ' +
-          'Você poderá adicionar documentos depois.'
-        );
-        
-        if (!confirmSubmit) {
-          return; // Não submete, mantém o modal aberto
-        }
-      }
-    } else {
-      // Se não estiver na última etapa, apenas avança
+    // Apenas avança para próxima etapa, não salva ainda
+    if (currentStep < totalSteps) {
       nextStep();
       return;
+    }
+
+    // Só salva quando estiver na última etapa (step 4)
+    const hasDocuments = formData.documents.length > 0;
+    
+    if (!hasDocuments) {
+      const confirmSubmit = window.confirm(
+        'Você não anexou nenhum documento. Deseja criar o processo mesmo assim? ' +
+        'Você poderá adicionar documentos depois.'
+      );
+      
+      if (!confirmSubmit) {
+        return; // Não submete, mantém o modal aberto
+      }
     }
 
     try {
@@ -576,11 +576,12 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
                 </button>
               ) : (
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={nextStep}
                   data-submit-button
                   className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                 >
-                  💾 Salvar
+                  Próximo
                 </button>
               )}
             </div>
